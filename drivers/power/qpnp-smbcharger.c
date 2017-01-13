@@ -4001,6 +4001,7 @@ static bool is_hvdcp_present(struct  smbchg_chip *chip)
 				pr_err("could not force 9V HVDCP continuing rc=%d\n",
 						rc);
 		}
+	}
 	if ((reg & hvdcp_sel) && is_usb_present(chip))
 		return true;
 
