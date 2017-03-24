@@ -292,16 +292,6 @@ static int32_t msm_flash_i2c_init(
 	flash_ctrl->power_info.power_down_setting_size =
 		flash_ctrl->power_setting_array.size_down;
 
-	if ((flash_ctrl->power_info.power_setting_size > MAX_POWER_CONFIG) ||
-	(flash_ctrl->power_info.power_down_setting_size > MAX_POWER_CONFIG)) {
-		pr_err("%s:%d invalid power setting size=%d size_down=%d\n",
-			__func__, __LINE__,
-			flash_ctrl->power_info.power_setting_size,
-			flash_ctrl->power_info.power_down_setting_size);
-		rc = -EINVAL;
-		goto msm_flash_i2c_init_fail;
-	}
-
 	rc = msm_camera_power_up(&flash_ctrl->power_info,
 		flash_ctrl->flash_device_type,
 		&flash_ctrl->flash_i2c_client);
@@ -381,7 +371,7 @@ static int32_t msm_flash_i2c_release(
 	int32_t rc = 0;
 
 	if (!(&flash_ctrl->power_info) || !(&flash_ctrl->flash_i2c_client)) {
-		pr_err("%s:%d failed: %pK %pK\n",
+		pr_err("%s:%d failed: %p %p\n",
 			__func__, __LINE__, &flash_ctrl->power_info,
 			&flash_ctrl->flash_i2c_client);
 		return -EINVAL;
@@ -486,8 +476,8 @@ static int32_t msm_flash_init(
 		for (i = 0; i < MAX_LED_TRIGGERS; i++) {
 			flash_ctrl->flash_max_current[i] =
 				flash_data->flash_current[i];
-			flash_ctrl->flash_max_duration[i] =
-					flash_data->flash_duration[i];
+			flash_data->flash_duration[i] =
+				flash_ctrl->flash_max_duration[i];
 		}
 	}
 
@@ -530,7 +520,7 @@ static int32_t msm_flash_low(
 	uint32_t curr = 0, max_current = 0;
 	int32_t i = 0;
 
-	CDBG("Enter\n");
+	//pr_err("wdy Enter\n");
 	/* Turn off flash triggers */
 	for (i = 0; i < flash_ctrl->flash_num_sources; i++)
 		if (flash_ctrl->flash_trigger[i])
@@ -556,7 +546,7 @@ static int32_t msm_flash_low(
 	}
 	if (flash_ctrl->switch_trigger)
 		led_trigger_event(flash_ctrl->switch_trigger, 1);
-	CDBG("Exit\n");
+	//pr_err("wdy Exit\n");
 	return 0;
 }
 
@@ -567,7 +557,7 @@ static int32_t msm_flash_high(
 	int32_t curr = 0;
 	int32_t max_current = 0;
 	int32_t i = 0;
-
+	//pr_err("wdy Enter\n");
 	/* Turn off torch triggers */
 	for (i = 0; i < flash_ctrl->torch_num_sources; i++)
 		if (flash_ctrl->torch_trigger[i])
@@ -593,6 +583,7 @@ static int32_t msm_flash_high(
 	}
 	if (flash_ctrl->switch_trigger)
 		led_trigger_event(flash_ctrl->switch_trigger, 1);
+	//pr_err("wdy Exit\n");
 	return 0;
 }
 
@@ -1239,6 +1230,7 @@ static int32_t msm_flash_platform_probe(struct platform_device *pdev)
 		rc = msm_torch_create_classdev(pdev, flash_ctrl);
 
 	CDBG("probe success\n");
+	g_flash_probe_count++;
 	return rc;
 }
 

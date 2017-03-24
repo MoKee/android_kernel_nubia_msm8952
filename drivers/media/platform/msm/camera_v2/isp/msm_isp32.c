@@ -327,9 +327,6 @@ bus_scale_register_failed:
 
 static void msm_vfe32_release_hardware(struct vfe_device *vfe_dev)
 {
-	msm_camera_io_w_mb(0x0, vfe_dev->vfe_base + 0x1C);
-	msm_camera_io_w_mb(0x0, vfe_dev->vfe_base + 0x20);
-	disable_irq(vfe_dev->vfe_irq->start);
 	free_irq(vfe_dev->vfe_irq->start, vfe_dev);
 	tasklet_kill(&vfe_dev->vfe_tasklet);
 	iounmap(vfe_dev->vfe_vbif_base);
@@ -676,17 +673,17 @@ static void msm_vfe32_axi_reload_wm(
 	}
 }
 
-static void msm_vfe32_axi_enable_wm(struct vfe_device *vfe_dev,
+static void msm_vfe32_axi_enable_wm(void __iomem *vfe_base,
 	uint8_t wm_idx, uint8_t enable)
 {
 	uint32_t val = msm_camera_io_r(
-	   vfe_dev->vfe_base + VFE32_WM_BASE(wm_idx));
+	   vfe_base + VFE32_WM_BASE(wm_idx));
 	if (enable)
 		val |= 0x1;
 	else
 		val &= ~0x1;
 	msm_camera_io_w_mb(val,
-		vfe_dev->vfe_base + VFE32_WM_BASE(wm_idx));
+		vfe_base + VFE32_WM_BASE(wm_idx));
 }
 
 static void msm_vfe32_axi_cfg_comp_mask(struct vfe_device *vfe_dev,
@@ -1234,7 +1231,7 @@ static int msm_vfe32_stats_check_streams(
 }
 
 static void msm_vfe32_stats_cfg_comp_mask(struct vfe_device *vfe_dev,
-	uint32_t stats_mask, uint8_t comp_idx, uint8_t enable)
+	uint32_t stats_mask, uint8_t enable)
 {
 	return;
 }
@@ -1296,12 +1293,6 @@ static void msm_vfe32_stats_cfg_ub(struct vfe_device *vfe_dev)
 			vfe_dev->vfe_base + VFE32_STATS_BASE(i) + 0x8);
 	}
 	return;
-}
-
-static bool msm_vfe32_is_module_cfg_lock_needed(
-	uint32_t reg_offset)
-{
-	return false;
 }
 
 static void msm_vfe32_stats_enable_module(struct vfe_device *vfe_dev,
@@ -1510,8 +1501,6 @@ struct msm_vfe_hardware_info vfe32_hw_info = {
 			.get_error_mask = msm_vfe32_get_error_mask,
 			.process_error_status = msm_vfe32_process_error_status,
 			.get_overflow_mask = msm_vfe32_get_overflow_mask,
-			.is_module_cfg_lock_needed =
-				msm_vfe32_is_module_cfg_lock_needed,
 		},
 		.stats_ops = {
 			.get_stats_idx = msm_vfe32_get_stats_idx,

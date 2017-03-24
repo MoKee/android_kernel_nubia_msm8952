@@ -261,7 +261,6 @@ enum eeprom_cfg_type_t {
 	CFG_EEPROM_READ_CAL_DATA,
 	CFG_EEPROM_WRITE_DATA,
 	CFG_EEPROM_GET_MM_INFO,
-	CFG_EEPROM_INIT,
 };
 
 struct eeprom_get_t {
@@ -284,22 +283,15 @@ struct eeprom_get_cmm_t {
 	uint32_t cmm_size;
 };
 
-struct msm_eeprom_info_t {
-	struct msm_sensor_power_setting_array *power_setting_array;
-	enum i2c_freq_mode_t i2c_freq_mode;
-	struct msm_eeprom_memory_map_array *mem_map_array;
-};
-
 struct msm_eeprom_cfg_data {
 	enum eeprom_cfg_type_t cfgtype;
 	uint8_t is_supported;
 	union {
-		char eeprom_name[MAX_EEPROM_NAME];
+		char eeprom_name[MAX_SENSOR_NAME];
 		struct eeprom_get_t get_data;
 		struct eeprom_read_t read_data;
 		struct eeprom_write_t write_data;
 		struct eeprom_get_cmm_t get_cmm_data;
-		struct msm_eeprom_info_t eeprom_info;
 	} cfg;
 };
 
@@ -323,8 +315,8 @@ struct msm_sensor_power_setting_array32 {
 };
 
 struct msm_camera_sensor_slave_info32 {
-	char sensor_name[MAX_SENSOR_NAME];
-	char eeprom_name[MAX_EEPROM_NAME];
+	char sensor_name[32];
+	char eeprom_name[32];
 	char actuator_name[32];
 	char ois_name[32];
 	char flash_name[32];
@@ -379,21 +371,14 @@ struct eeprom_write_t32 {
 	uint32_t num_bytes;
 };
 
-struct msm_eeprom_info_t32 {
-	compat_uptr_t power_setting_array;
-	enum i2c_freq_mode_t i2c_freq_mode;
-	compat_uptr_t mem_map_array;
-};
-
 struct msm_eeprom_cfg_data32 {
 	enum eeprom_cfg_type_t cfgtype;
 	uint8_t is_supported;
 	union {
-		char eeprom_name[MAX_EEPROM_NAME];
+		char eeprom_name[MAX_SENSOR_NAME];
 		struct eeprom_get_t get_data;
 		struct eeprom_read_t32 read_data;
 		struct eeprom_write_t32 write_data;
-		struct msm_eeprom_info_t32 eeprom_info;
 	} cfg;
 };
 

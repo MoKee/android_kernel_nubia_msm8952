@@ -65,7 +65,7 @@ static int msm_isp_stats_cfg_ping_pong_address(struct vfe_device *vfe_dev,
 			!dual_vfe_res->stats_data[ISP_VFE0] ||
 			!dual_vfe_res->vfe_base[ISP_VFE1] ||
 			!dual_vfe_res->stats_data[ISP_VFE1]) {
-			pr_err("%s:%d error vfe0 %pK %pK vfe1 %pK %pK\n", __func__,
+			pr_err("%s:%d error vfe0 %p %p vfe1 %p %p\n", __func__,
 				__LINE__, dual_vfe_res->vfe_base[ISP_VFE0],
 				dual_vfe_res->stats_data[ISP_VFE0],
 				dual_vfe_res->vfe_base[ISP_VFE1],
@@ -114,7 +114,7 @@ static int32_t msm_isp_stats_buf_divert(struct vfe_device *vfe_dev,
 
 	if (!vfe_dev || !done_buf || !ts || !buf_event || !stream_info ||
 		!comp_stats_type_mask) {
-		pr_err("%s:%d failed: invalid params %pK %pK %pK %pK %pK %pK\n",
+		pr_err("%s:%d failed: invalid params %p %p %p %p %p %p\n",
 			__func__, __LINE__, vfe_dev, done_buf, ts, buf_event,
 			stream_info, comp_stats_type_mask);
 		return -EINVAL;
@@ -198,7 +198,7 @@ static int32_t msm_isp_stats_configure(struct vfe_device *vfe_dev,
 	uint32_t comp_stats_type_mask = 0;
 
 	memset(&buf_event, 0, sizeof(struct msm_isp_event_data));
-	buf_event.timestamp = ts->buf_time;
+	buf_event.timestamp = ts->event_time;
 	buf_event.frame_id = vfe_dev->axi_data.src_info[VFE_PIX_0].frame_id;
 	pingpong_status = vfe_dev->hw_info->
 		vfe_ops.stats_ops.get_pingpong_status(vfe_dev);
@@ -209,7 +209,7 @@ static int32_t msm_isp_stats_configure(struct vfe_device *vfe_dev,
 		stream_info = &vfe_dev->stats_data.stream_info[i];
 
 		if (stream_info->state == STATS_INACTIVE) {
-			pr_debug("%s: Warning! Stream already inactive. Drop irq handling\n",
+			pr_warn("%s: Warning! Stream already inactive. Drop irq handling\n",
 				__func__);
 			continue;
 		}
@@ -248,7 +248,6 @@ void msm_isp_process_stats_irq(struct vfe_device *vfe_dev,
 	bool comp_flag = false;
 	uint32_t num_stats_comp_mask =
 		vfe_dev->hw_info->stats_hw_info->num_stats_comp_mask;
-
 	stats_comp_mask = vfe_dev->hw_info->vfe_ops.stats_ops.
 		get_comp_mask(irq_status0, irq_status1);
 	stats_irq_mask = vfe_dev->hw_info->vfe_ops.stats_ops.
@@ -500,16 +499,14 @@ void msm_isp_update_stats_framedrop_reg(struct vfe_device *vfe_dev)
 void msm_isp_stats_stream_update(struct vfe_device *vfe_dev)
 {
 	int i;
+	uint32_t stats_mask = 0, comp_stats_mask = 0;
 	uint32_t enable = 0;
-	uint8_t comp_flag = 0;
 	struct msm_vfe_stats_shared_data *stats_data = &vfe_dev->stats_data;
-	struct msm_vfe_stats_ops *stats_ops =
-		&vfe_dev->hw_info->vfe_ops.stats_ops;
-
 	for (i = 0; i < vfe_dev->hw_info->stats_hw_info->num_stats_type; i++) {
 		if (stats_data->stream_info[i].state == STATS_START_PENDING ||
 				stats_data->stream_info[i].state ==
 					STATS_STOP_PENDING) {
+			stats_mask |= i;
 			enable = stats_data->stream_info[i].state ==
 				STATS_START_PENDING ? 1 : 0;
 			stats_data->stream_info[i].state =
@@ -518,12 +515,12 @@ void msm_isp_stats_stream_update(struct vfe_device *vfe_dev)
 				STATS_STARTING : STATS_STOPPING;
 			vfe_dev->hw_info->vfe_ops.stats_ops.enable_module(
 				vfe_dev, BIT(i), enable);
-			comp_flag = stats_data->stream_info[i].composite_flag;
-			if (comp_flag)
-				stats_ops->cfg_comp_mask(vfe_dev, BIT(i),
-					(comp_flag - 1), enable);
+			vfe_dev->hw_info->vfe_ops.stats_ops.cfg_comp_mask(
+			   vfe_dev, BIT(i), enable);
 		} else if (stats_data->stream_info[i].state == STATS_STARTING ||
 			stats_data->stream_info[i].state == STATS_STOPPING) {
+			if (stats_data->stream_info[i].composite_flag)
+				comp_stats_mask |= i;
 			stats_data->stream_info[i].state =
 				stats_data->stream_info[i].state ==
 				STATS_STARTING ? STATS_ACTIVE : STATS_INACTIVE;
@@ -691,7 +688,7 @@ static int msm_isp_start_stats_stream(struct vfe_device *vfe_dev,
 			vfe_dev, stats_mask, stream_cfg_cmd->enable);
 		for (i = 0; i < num_stats_comp_mask; i++) {
 			vfe_dev->hw_info->vfe_ops.stats_ops.cfg_comp_mask(
-				vfe_dev, comp_stats_mask[i], i,  1);
+			 vfe_dev, comp_stats_mask[i], 1);
 		}
 	}
 	return rc;
@@ -758,7 +755,7 @@ static int msm_isp_stop_stats_stream(struct vfe_device *vfe_dev,
 			vfe_dev, stats_mask, stream_cfg_cmd->enable);
 		for (i = 0; i < num_stats_comp_mask; i++) {
 			vfe_dev->hw_info->vfe_ops.stats_ops.cfg_comp_mask(
-			   vfe_dev, comp_stats_mask[i], i, 0);
+			   vfe_dev, comp_stats_mask[i], 0);
 		}
 	}
 

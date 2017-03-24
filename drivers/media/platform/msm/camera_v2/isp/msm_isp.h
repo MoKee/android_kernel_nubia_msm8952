@@ -139,12 +139,13 @@ struct msm_vfe_irq_ops {
 	void (*process_stats_irq) (struct vfe_device *vfe_dev,
 		uint32_t irq_status0, uint32_t irq_status1,
 		struct msm_isp_timestamp *ts);
+	void (*enable_camif_err)(struct vfe_device *vfe_dev, int enable);
 };
 
 struct msm_vfe_axi_ops {
-	void (*reload_wm)(struct vfe_device *vfe_dev, void __iomem *vfe_base,
+	void (*reload_wm) (struct vfe_device *vfe_dev, void __iomem *vfe_base,
 		uint32_t reload_mask);
-	void (*enable_wm) (struct vfe_device *vfe_dev,
+	void (*enable_wm) (void __iomem *vfe_base,
 		uint8_t wm_idx, uint8_t enable);
 	int32_t (*cfg_io_format) (struct vfe_device *vfe_dev,
 		enum msm_vfe_axi_stream_src stream_src,
@@ -221,7 +222,6 @@ struct msm_vfe_core_ops {
 		uint32_t *irq1_mask);
 	void (*get_rdi_wm_mask)(struct vfe_device *vfe_dev,
 		uint32_t *rdi_wm_mask);
-	bool (*is_module_cfg_lock_needed)(uint32_t reg_offset);
 };
 struct msm_vfe_stats_ops {
 	int (*get_stats_idx) (enum msm_isp_stats_type stats_type);
@@ -231,10 +231,9 @@ struct msm_vfe_stats_ops {
 		uint32_t framedrop_pattern, uint32_t framedrop_period);
 	void (*clear_framedrop) (struct vfe_device *vfe_dev,
 		struct msm_vfe_stats_stream *stream_info);
-	void (*cfg_comp_mask)(struct vfe_device *vfe_dev,
-		uint32_t stats_mask, uint8_t comp_index,
-		uint8_t enable);
-	void (*cfg_wm_irq_mask)(struct vfe_device *vfe_dev,
+	void (*cfg_comp_mask) (struct vfe_device *vfe_dev,
+		uint32_t stats_mask, uint8_t enable);
+	void (*cfg_wm_irq_mask) (struct vfe_device *vfe_dev,
 		struct msm_vfe_stats_stream *stream_info);
 	void (*clear_wm_irq_mask) (struct vfe_device *vfe_dev,
 		struct msm_vfe_stats_stream *stream_info);
@@ -302,8 +301,6 @@ enum msm_vfe_axi_state {
 	PAUSING,
 	RESUMING,
 	UPDATING,
-	STARTED,
-	STOPPED,
 };
 
 enum msm_vfe_axi_cfg_update_state {
@@ -410,8 +407,6 @@ struct msm_vfe_src_info {
 	uint32_t input_format;/*V4L2 pix format with bayer pattern*/
 	uint32_t last_updt_frm_id;
 	uint32_t sof_counter_step;
-	uint64_t stats_ab;
-	uint64_t stats_ib;
 	enum msm_vfe_dual_hw_type dual_hw_type;
 	struct msm_vfe_dual_hw_ms_info dual_hw_ms_info;
 };
@@ -422,8 +417,6 @@ struct msm_vfe_fetch_engine_info {
 	uint32_t bufq_handle;
 	uint32_t buf_idx;
 	uint8_t is_busy;
-	uint8_t offline_mode;
-	uint32_t fd;
 };
 
 enum msm_wm_ub_cfg_type {

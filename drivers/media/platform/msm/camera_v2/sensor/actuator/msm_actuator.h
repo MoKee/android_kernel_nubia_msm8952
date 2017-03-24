@@ -27,14 +27,15 @@
 
 #define	MSM_ACTUATOT_MAX_VREGS (10)
 #define	ACTUATOR_MAX_POLL_COUNT 10
+//ZTEMT: li.bin223 20150421 add for avoid kernel crash ----start
+#define	MSM_ACTUATOT_MAX_NAME (32)
+//ZTEMT: li.bin223 20150421 add for avoid kernel crash ----end
 
 struct msm_actuator_ctrl_t;
 
 enum msm_actuator_state_t {
-	ACT_ENABLE_STATE,
-	ACT_OPS_ACTIVE,
-	ACT_OPS_INACTIVE,
-	ACT_DISABLE_STATE,
+	ACTUATOR_POWER_DOWN,
+	ACTUATOR_POWER_UP,
 };
 
 struct msm_actuator_func_tbl {
@@ -107,6 +108,9 @@ struct msm_actuator_ctrl_t {
 	struct msm_actuator_vreg vreg_cfg;
 	struct park_lens_data_t park_lens;
 	uint32_t max_code_size;
+	// ZTEMT: fuyipeng add for manual AF -----start
+	char act_name[MSM_ACTUATOT_MAX_NAME];
+	// ZTEMT: fuyipeng add for manual AF -----end
 };
 
 #endif
