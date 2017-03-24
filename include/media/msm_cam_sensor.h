@@ -336,6 +336,7 @@ struct msm_camera_sensor_slave_info32 {
 	struct msm_sensor_power_setting_array32 power_setting_array;
 	uint8_t  is_init_params_valid;
 	struct msm_sensor_init_params sensor_init_params;
+	uint8_t is_flash_supported;
 	enum msm_sensor_output_format_t output_format;
 };
 
@@ -446,6 +447,9 @@ enum msm_actuator_cfg_type_t {
 	CFG_ACTUATOR_POWERDOWN,
 	CFG_ACTUATOR_POWERUP,
 	CFG_ACTUATOR_INIT,
+	// ZTEMT: fuyipeng add for manual AF -----start
+	CFG_SET_ACTUATOR_NAME,
+    // ZTEMT: fuyipeng add for manual AF -----end
 };
 
 enum msm_ois_cfg_type_t {
@@ -569,6 +573,7 @@ struct msm_actuator_set_position_t {
 	uint32_t hw_params;
 	uint16_t pos[MAX_NUMBER_OF_STEPS];
 	uint16_t delay[MAX_NUMBER_OF_STEPS];
+	int16_t dac_comp;//ZTEMT zhangwenting 20150611 add manual AF DAC compensation
 };
 
 struct msm_actuator_cfg_data {
@@ -580,6 +585,9 @@ struct msm_actuator_cfg_data {
 		struct msm_actuator_get_info_t get_info;
 		struct msm_actuator_set_position_t setpos;
 		enum af_camera_name cam_name;
+		// ZTEMT: fuyipeng add for manual AF -----start
+        char *act_name;
+       // ZTEMT: fuyipeng add for manual AF -----end	
 	} cfg;
 };
 
@@ -734,6 +742,9 @@ struct msm_actuator_cfg_data32 {
 		struct msm_actuator_get_info_t get_info;
 		struct msm_actuator_set_position_t setpos;
 		enum af_camera_name cam_name;
+		// ZTEMT: fuyipeng add for manual AF -----start
+        char *act_name;
+        // ZTEMT: fuyipeng add for manual AF -----end	
 	} cfg;
 };
 

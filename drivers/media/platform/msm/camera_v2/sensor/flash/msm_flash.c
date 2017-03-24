@@ -21,7 +21,7 @@
 
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
-
+static u_short g_flash_probe_count = 0;//ZTEMT: add by wangdeyong to avoid the  duplicate  register of torch-light0 if the project  supports  the rear & front flash
 DEFINE_MSM_MUTEX(msm_flash_mutex);
 
 static struct v4l2_file_operations msm_flash_v4l2_subdev_fops;
@@ -117,22 +117,22 @@ static int32_t msm_torch_create_classdev(struct platform_device *pdev,
 	}
 
 	for (i = 0; i < fctrl->torch_num_sources; i++) {
-		if (fctrl->torch_trigger[i]) {
+		if (fctrl->torch_trigger[i] && (i+g_flash_probe_count)<MAX_LED_TRIGGERS) {
 			torch_trigger = fctrl->torch_trigger[i];
 			CDBG("%s:%d msm_torch_brightness_set for torch %d",
 				__func__, __LINE__, i);
-			msm_torch_brightness_set(&msm_torch_led[i],
+			msm_torch_brightness_set(&msm_torch_led[i+g_flash_probe_count],
 				LED_OFF);
 
 			rc = led_classdev_register(&pdev->dev,
-				&msm_torch_led[i]);
+				&msm_torch_led[i+g_flash_probe_count]);
 			if (rc) {
 				pr_err("Failed to register %d led dev. rc = %d\n",
 						i, rc);
 				return rc;
 			}
 		} else {
-			pr_err("Invalid fctrl->torch_trigger[%d]\n", i);
+			pr_err("Invalid fctrl->torch_trigger[%d] or g_flash_probe_count cause out_bounder: %d\n", i,g_flash_probe_count);
 			return -EINVAL;
 		}
 	}

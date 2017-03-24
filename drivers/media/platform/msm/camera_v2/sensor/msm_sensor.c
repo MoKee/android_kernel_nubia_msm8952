@@ -563,7 +563,10 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 		pr_err("%s: %s: read id failed\n", __func__, sensor_name);
 		return rc;
 	}
-
+	CDBG("%s read chipid = %x\n",__func__,chipid);
+	if (!strncmp(sensor_name, "imx179",strlen("imx179"))) {//ZTEMT: wangdeyong add for front camera
+			chipid >>=8;
+	}
 	CDBG("%s: read id: 0x%x expected id 0x%x:\n", __func__, chipid,
 		slave_info->sensor_id);
 	if (msm_sensor_id_by_mask(s_ctrl, chipid) != slave_info->sensor_id) {
